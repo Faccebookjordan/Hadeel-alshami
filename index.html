@@ -57,7 +57,6 @@
         .globe-icon { color: #65676b; filter: grayscale(100%); font-size: 11px; vertical-align: middle; }
         .post-body { padding: 0 16px 12px; font-size: 16px; line-height: 1.5; color: #050505; word-break: break-word; font-weight: 500; }
         
-        /* تعديل تصميم شريط الإيكات والتفاعلات الجديد المطابق للصورة */
         .post-stats { display: flex; justify-content: space-between; padding: 10px 16px; font-size: 14px; color: #65676b; border-bottom: 1px solid #e4e6eb; font-weight: 600; align-items: center; }
         .post-stats span.clickable-comments:hover { text-decoration: underline; color: #0084ff; }
         .post-actions-bar { display: flex; justify-content: space-around; padding: 4px 0; }
@@ -312,6 +311,10 @@
                 <label style="font-size: 13px; font-weight: 700; color: #65676b; display: block; margin-bottom: 5px;">عدد التفاعلات:</label>
                 <input type="text" id="postReactionsInput" value="5" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; outline: none; font-weight: 600;">
             </div>
+            <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                <label style="font-size: 13px; font-weight: 700; color: #65676b; display: block; margin-bottom: 5px;">تاريخ المنشور المخصص (اختياري - حروف، أرقام، رموز مثل: منذ ساعتين، أو 2026/10/20):</label>
+                <input type="text" id="postCustomTimeInput" placeholder="اتركه فارغاً للوقت التلقائي" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; outline: none; font-weight: 600;">
+            </div>
             <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" id="postLockedCheckbox" style="width: 20px; height: 20px; cursor: pointer;">
                 <label for="postLockedCheckbox" style="font-size: 14px; font-weight: 700; color: #333; cursor: pointer;">قفل المنشور (إخفاء عن الزوار ولا يراه سوى الأدمن)</label>
@@ -480,7 +483,7 @@
             }
         }
 
-        window.compressImage = function(file, maxWidth = 800, maxHeight = 800, quality = 0.65) {
+        window.compressImage = function(file, maxWidth = 1200, maxHeight = 1200, quality = 0.85) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -692,10 +695,10 @@
             const file = e.target.files[0];
             if (file) {
                 try {
-                    let base64Url = file.type.startsWith('video') ? await compressVideo(file) : await compressImage(file, 600, 600, 0.65);
+                    let base64Url = file.type.startsWith('video') ? await compressVideo(file) : await compressImage(file, 800, 800, 0.85);
                     window.commentTempFile = { url: base64Url, type: file.type.startsWith('video') ? 'video' : 'image' };
                     let previewEl = document.getElementById('commentFilePreview');
-                    if (previewEl) previewEl.innerText = "تم إرفاق الملف وضغطه بنجاح";
+                    if (previewEl) previewEl.innerText = "تم إرفاق الملف وضغطه بجودة عالية";
                 } catch(err) {
                     alert("حدث خطأ أثناء رفع الملف.");
                 }
@@ -706,7 +709,7 @@
             const file = e.target.files[0];
             if (file) {
                 try {
-                    let base64Url = file.type.startsWith('video') ? await compressVideo(file) : await compressImage(file, 700, 900, 0.7);
+                    let base64Url = file.type.startsWith('video') ? await compressVideo(file) : await compressImage(file, 900, 1200, 0.85);
                     let type = file.type.startsWith('video') ? 'video' : 'image';
                     window.activeStory = { mediaUrl: base64Url, mediaType: type, time: Date.now(), viewers: [] };
                     updateStoryUI();
@@ -854,7 +857,7 @@
 
         window.addEventListener('popstate', function () {
             let modals = [
-                { id: 'createPostScreen', cleanup: () => { document.getElementById('postText').value = ""; document.getElementById('filePreview').innerText = ""; window.tempFiles = []; window.currentEditingPostId = null; } },
+                { id: 'createPostScreen', cleanup: () => { document.getElementById('postText').value = ""; document.getElementById('postCustomTimeInput').value = ""; document.getElementById('filePreview').innerText = ""; window.tempFiles = []; window.currentEditingPostId = null; } },
                 { id: 'imageViewerModal', cleanup: () => {} },
                 { id: 'viewersModal', cleanup: () => {} },
                 { id: 'storyViewerModal', cleanup: () => { let vid = document.getElementById('storyMediaVid'); if(vid) vid.pause(); } },
@@ -1017,7 +1020,7 @@
             const file = e.target.files[0];
             if (file) {
                 try {
-                    window.coverImgUrl = await compressImage(file, 900, 450, 0.65);
+                    window.coverImgUrl = await compressImage(file, 1200, 600, 0.85);
                     updateCoverDisplay();
                     await saveDataCloud();
                     alert("تم تحديث غلاف الصفحة بنجاح في السحابة!");
@@ -1190,18 +1193,22 @@
                 if (m.type === 'video') {
                     return `
                         <div style="position:relative; width:100%; background:#000; cursor:pointer;" onclick="openVideoViewer('${m.url}', ${authorId}, '${reactions}', '${commentsCount}', '${postId}', '${reactionType}')">
-                            <video src="${m.url}" controlslist="nodownload noplaybackrate" disablepictureinpicture oncontextmenu="return false;" style="width:100%; max-height:450px; object-fit:cover; display:block; pointer-events:none;"></video>
+                            <video src="${m.url}" controlslist="nodownload noplaybackrate" disablepictureinpicture oncontextmenu="return false;" style="width:100%; max-height:550px; object-fit:contain; display:block; pointer-events:none; background:#000;"></video>
                             <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.6); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;">
                                 <i class="fa-solid fa-play" style="margin-left:3px;"></i>
                             </div>
                         </div>
                     `;
                 } else {
-                    return `<img src="${m.url}" class="post-media" style="width:100%; max-height:450px; object-fit:cover; display:block; cursor:pointer;" onclick="openImageViewer('${m.url}')" title="انقر لعرض الصورة">`;
+                    return `
+                        <div style="width:100%; background:#f9f9f9; display:flex; justify-content:center; align-items:center; overflow:hidden; cursor:pointer;" onclick="openImageViewer('${m.url}')">
+                            <img src="${m.url}" style="width:100%; max-height:600px; object-fit:contain; display:block;" title="انقر لعرض الصورة بكامل دقتها">
+                        </div>
+                    `;
                 }
             }
             let count = mediaFiles.length;
-            let gridStyle = 'display: grid; gap: 2px; width: 100%; max-height: 450px; overflow: hidden; background: #fff;';
+            let gridStyle = 'display: grid; gap: 2px; width: 100%; max-height: 500px; overflow: hidden; background: #fff;';
             if (count === 2) gridStyle += ' grid-template-columns: 1fr 1fr; height: 350px;';
             else if (count === 3) gridStyle += ' grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; height: 380px;';
             else gridStyle += ' grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 380px;';
@@ -1217,7 +1224,7 @@
                 if (idx === 3 && count > 4) {
                     extraOverlay = `<div style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); color: #fff; display: flex; justify-content: center; align-items: center; font-size: 26px; font-weight: 700;">+${count - 4}</div>`;
                 }
-                let itemStyle = 'position: relative; width: 100%; height: 100%; overflow: hidden; cursor: pointer; background: #000;';
+                let itemStyle = 'position: relative; width: 100%; height: 100%; overflow: hidden; cursor: pointer; background: #000; display: flex; align-items: center; justify-content: center;';
                 if (count === 3 && idx === 0) itemStyle += ' grid-row: span 2;';
                 if (m.type === 'video') {
                     return `
@@ -1232,7 +1239,7 @@
                 } else {
                     return `
                         <div style="${itemStyle}" onclick="openImageViewer('${m.url}')">
-                            <img src="${m.url}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                            <img src="${m.url}" style="width: 100%; height: 100%; object-fit: contain; display: block; background: #000;">
                             ${extraOverlay}
                         </div>
                     `;
@@ -1261,7 +1268,10 @@
                 let avatarHtml = author.avatar && author.avatar.trim() !== "" ? `<img src="${author.avatar}" class="post-avatar">` : `<div class="post-avatar" style="background:#e4e6eb; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-user" style="font-size:18px; color:#8a8d91;"></i></div>`;
                 let lockedClass = p.isLocked ? ' locked-post' : '';
                 let lockedBadge = p.isLocked ? `<span style="background: #ff4500; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 6px; font-weight: 700;"><i class="fa-solid fa-lock"></i> مقفل (مخفي عن الزوار)</span>` : '';
-                let postTime = `${getTimeAgo(p.id)} · <i class='fa-solid fa-globe globe-icon'></i>`;
+                
+                let timeDisplay = p.customTime && p.customTime.trim() !== "" ? p.customTime : getTimeAgo(p.id);
+                let postTime = `${timeDisplay} · <i class='fa-solid fa-globe globe-icon'></i>`;
+                
                 let postReactionsHtml = renderReactionsHtml(p.reactions, p.reactionType);
                 let postCommentsCount = p.commentsCount ? p.commentsCount : "0 تعليقات";
                 let textHtml = p.text && p.text.trim() !== "" ? `<div class="post-body"><div>${linkify(p.text)}</div></div>` : '';
@@ -1287,13 +1297,11 @@
                         ${textHtml}
                         ${renderMediaFiles(mediaFilesList, p.id)}
                         
-                        <!-- إحصائيات التفاعلات والتعليقات الجديدة -->
                         <div class="post-stats">
                             <span>${postReactionsHtml}</span>
                             <span class="clickable-comments" style="cursor: pointer;" onclick="openComments('${p.id}')">${postCommentsCount}</span>
                         </div>
 
-                        <!-- شريط التفاعل الجديد المطابق للصورة -->
                         <div class="post-actions-bar">
                             <div class="post-action-btn" onclick="togglePostLike(this)">
                                 <i class="fa-regular fa-thumbs-up"></i> أعجبني
@@ -1321,6 +1329,7 @@
             let textEl = document.getElementById('postText');
             let reactionsEl = document.getElementById('postReactionsInput');
             let reactionTypeSelect = document.getElementById('postReactionTypeSelect');
+            let customTimeInput = document.getElementById('postCustomTimeInput');
             let lockedCheckbox = document.getElementById('postLockedCheckbox');
             let filePreviewEl = document.getElementById('filePreview');
             let clearMediaBtn = document.getElementById('clearPostMediaBtn');
@@ -1339,10 +1348,17 @@
                 let extractedCount = post && post.reactions !== undefined ? String(post.reactions).replace(/[^\d]/g, '') : "";
                 reactionsEl.value = extractedCount ? extractedCount : "5";
                 reactionTypeSelect.value = post && post.reactionType ? post.reactionType : "😆";
+                customTimeInput.value = post && post.customTime ? post.customTime : "";
                 lockedCheckbox.checked = post ? !!post.isLocked : false;
                 if (post && post.authorId) authorSelect.value = post.authorId;
+                
                 if (post && post.mediaFiles && post.mediaFiles.length > 0) {
                     window.tempFiles = [...post.mediaFiles];
+                } else if (post && post.mediaUrl) {
+                    window.tempFiles = [{ url: post.mediaUrl, type: post.mediaType || 'image' }];
+                }
+
+                if (window.tempFiles.length > 0) {
                     filePreviewEl.innerText = `يوجد ${window.tempFiles.length} ملف/ملفات مرفقة حالياً.`;
                     clearMediaBtn.style.display = 'block';
                 } else {
@@ -1355,6 +1371,7 @@
                 textEl.value = "";
                 reactionsEl.value = "5";
                 reactionTypeSelect.value = "😆";
+                customTimeInput.value = "";
                 lockedCheckbox.checked = false;
                 filePreviewEl.innerText = "";
                 clearMediaBtn.style.display = 'none';
@@ -1397,17 +1414,17 @@
                     alert("يمكنك إرفاق بحد أقصى 5 صور أو فيديوهات فقط لكل منشور.");
                     return;
                 }
-                document.getElementById('filePreview').innerText = "جاري ضغط ومعالجة الملفات...";
+                document.getElementById('filePreview').innerText = "جاري ضغط ومعالجة الملفات بدقة عالية...";
                 for (let i = 0; i < files.length; i++) {
                     let file = files[i];
                     try {
-                        let base64Url = file.type.startsWith('video') ? await compressVideo(file) : await compressImage(file, 800, 800, 0.65);
+                        let base64Url = file.type.startsWith('video') ? await compressVideo(file) : await compressImage(file, 1200, 1200, 0.85);
                         window.tempFiles.push({ url: base64Url, type: file.type.startsWith('video') ? 'video' : 'image' });
                     } catch(err) {
                         console.error(err);
                     }
                 }
-                document.getElementById('filePreview').innerText = `تم ضغط وإرفاق ${window.tempFiles.length} ملفات بنجاح.`;
+                document.getElementById('filePreview').innerText = `تم إرفاق ${window.tempFiles.length} ملفات بدقة عالية ووضوح تام.`;
                 document.getElementById('clearPostMediaBtn').style.display = 'block';
             }
             e.target.value = "";
@@ -1417,6 +1434,7 @@
             let text = document.getElementById('postText').value;
             let reactions = document.getElementById('postReactionsInput').value;
             let reactionType = document.getElementById('postReactionTypeSelect').value;
+            let customTime = document.getElementById('postCustomTimeInput').value.trim();
             let isLocked = document.getElementById('postLockedCheckbox').checked;
             let authorId = parseInt(document.getElementById('postAuthorSelect').value);
             
@@ -1431,6 +1449,7 @@
                     post.text = text;
                     post.reactions = finalReactionsVal;
                     post.reactionType = reactionType;
+                    post.customTime = customTime;
                     post.isLocked = isLocked;
                     post.authorId = authorId;
                     post.mediaFiles = [...window.tempFiles];
@@ -1444,6 +1463,7 @@
                     mediaFiles: [...window.tempFiles],
                     reactions: finalReactionsVal,
                     reactionType: reactionType,
+                    customTime: customTime,
                     isLocked: isLocked,
                     commentsCount: "0 تعليقات",
                     viewers: [],
@@ -1602,7 +1622,7 @@
                 authorAvatar: selectedAcc.avatar || "",
                 badge: "",
                 text: text,
-                time: Date.Now ? Date.now() : Date.now(),
+                time: Date.now(),
                 attachment: window.commentTempFile.url,
                 attachmentType: window.commentTempFile.type,
                 reaction: "",
