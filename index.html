@@ -338,18 +338,18 @@
     <div class="admin-lock" onclick="handleLockClick()"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-analytics.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyBatvkwTJ52PC2WGYTtAmWLEh-z_RR0m6M",
-            authDomain: "hadeel-2.firebaseapp.com",
-            projectId: "hadeel-2",
-            storageBucket: "hadeel-2.firebasestorage.app",
-            messagingSenderId: "770603083559",
-            appId: "1:770603083559:web:be104478fd8ab170112b02",
-            measurementId: "G-DWYBZPWK5X"
+            apiKey: "AIzaSyB356u4WSG_VA7rIE9g_ivktYZo36lZKcg",
+            authDomain: "hadeel-d0e63.firebaseapp.com",
+            projectId: "hadeel-d0e63",
+            storageBucket: "hadeel-d0e63.firebasestorage.app",
+            messagingSenderId: "836983839309",
+            appId: "1:836983839309:web:4c6799daff2bd066139a04",
+            measurementId: "G-Z2MCG1N9S2"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -412,6 +412,7 @@
                 initUI();
             }
 
+            // الاستماع الفوري والتلقائي للتغيرات من السحابة لضمان التحديث السريع بدون تعليق
             onSnapshot(window.docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     let data = docSnap.data();
@@ -483,7 +484,6 @@
             }
         }
 
-        // دالة ضغط الصور المضغوطة بكفاءة عالية لتخفيف الحجم
         window.compressImage = function(file, maxWidth = 800, maxHeight = 800, quality = 0.75) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
